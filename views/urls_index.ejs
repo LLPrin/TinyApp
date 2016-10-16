@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<% include ./partials/_header %>
+    <!-- Write EJS code here to display shortened links -->
+    <!-- We're going to write a for in loop in a table that lists the values in the URL database -->
+    <table>
+      <!-- table row -->
+      <tr>
+        <!-- table heading -->
+        <th>Key</th>
+        <th>Full URL</th>
+      </tr>
+
+    <% for ( let urlKey in urls ) { %>
+      <tr>
+        <td>
+          <form method="POST" action="/urls/<%= urlKey %>/delete">
+          <%= urlKey %>
+        </td>
+        <td>
+          <%= urls[urlKey] %><button method="POST" type="submit">Delete</button></form>
+        </td>
+      </tr>
+    <% } %>
+    </table>
+
+
+
+</body>
+</html>
