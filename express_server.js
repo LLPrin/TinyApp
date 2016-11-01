@@ -39,8 +39,16 @@ var users =  {'123456': { username: 'lydia', email: 'lydia@email.com', password:
 
 //-------------------------------------------ROUTES
 //GET DATA
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
+app.get("/urls", (req, res) => {
+  let templateVars = { urls: urlDatabase,
+  userid: req.cookies.userid,
+  username: users[req.cookies.userid].username};
+  // input: req.body.username}
+  if(req.cookies){
+    res.render("urls_index", templateVars);
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.get("/", (req, res) => {
@@ -52,9 +60,9 @@ app.get("/", (req, res) => {
   }
 });
 
-app.get("/urls", (req, res) => {
+app.get("/urls.json", (req, res) => {
   let templateVars = { urls: urlDatabase,
-  email: req.cookies.email};
+  userid: req.cookies.userid};
   // input: req.body.username};
   res.render("urls_index", templateVars);
 });
@@ -62,14 +70,14 @@ app.get("/urls", (req, res) => {
 
 // CREATE URL
 app.get("/urls/create", (req, res) => {
-  let templateVars = { email: req.cookies.email};
+  let templateVars = { userid: req.cookies.userid };
   res.render("urls_new", templateVars);
 });
 
 // REDIRECT TO LONGURL BY USING SHORT
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = { urls: urlDatabase,
-    email: req.cookies.email};
+     userid: req.cookies.userid };
   let longURL = req.body.longURL;
   res.render("urls_show", {shortURL: req.params.shortURL});
 });
@@ -77,7 +85,7 @@ app.get("/urls/:shortURL", (req, res) => {
 // LOGIN PAGE
 app.get("/login", (req, res) => {
     let templateVars = { urls: urlDatabase,
-      email: ''
+      userid: ''
     };
   // username: req.signedCookies.username};
   // var username = req.body.username;}
@@ -121,7 +129,7 @@ app.post("/login", (req, res) => {
   for (let user in users) {
     if (req.body.email === users[user].email && req.body.password === users[user].password) {
       res.cookie("userid", user)
-      res.cookie("email", users[user].email)
+      // res.cookie("email", users[user].email)
       res.redirect("/urls");
     } else {
       res.redirect(403, "/")
@@ -132,7 +140,7 @@ app.post("/login", (req, res) => {
 // LOGOUT & DELETE COOKIE
 app.post("/logout", (req, res) => {
   const username = req.body.username
-  res.clearCookie('email');
+  res.clearCookie('userid');
   res.redirect('/login');
   });
 
@@ -151,7 +159,7 @@ app.post("/register", (req, res) => {
   //CHECK if
   if (username === "" || email === "" || password === "") {
     console.log("Please enter values for all fields.")
-    res.redirect(400, "/regiser");
+    res.redirect(400, "/register");
   } else {
     var user = {
       username: username,
@@ -161,7 +169,7 @@ app.post("/register", (req, res) => {
 
       users[idNum] = user;
       //change all username cookies to userid
-      res.cookie("email", email);
+      res.cookie("userid", users[userid]);
       res.redirect("/urls");
   }
 

@@ -1,15 +1,15 @@
 <h1>Welcome</h1>
-<% if (email) { %>
-  <h3>Hello, <%= email %></h3>
+<% if (userid) { %>
+  <h3>Hello, <%= username %></h3>
   <form action="/logout" method="POST">
       <input type="submit" value="logout">
 <% } else { %>
 <h3>Hello, please sign in</h3>
   <form action="/login" method="POST">
     <label for="">Enter a email:</label>
-    <input id="email" type="text" name="email">
+    <input id="email" type="email" name="email">
     <label for="">Enter your password:</label>
-    <input id="password" type="text" name="password">
+    <input id="password" type="password" name="password">
     <input type="submit" value="Login">
   </form>
   <h4><a href="http://localhost:8080/register">Register </a></h4>
