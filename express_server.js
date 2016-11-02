@@ -6,21 +6,12 @@ const methodOverride = require("method-override") //gives express ability to all
 const bodyParser = require("body-parser"); //allows use to grab shit from body
 const cookieParser = require('cookie-parser'); //
 const bcrypt = require('bcrypt');
+const cookieSession = require('cookie-session')
 
-//connections to mongo
-
-//Route has 2 pieces > HTTP
-
-// app.use(cookieSession(
-// const password = "purple-monkey-dinosaur"; // you will probably this from req.params
-// const hashed_password = bcrypt.hashSync(password, 10);
-
-//res.cookie - to set values to cookiess
-// const cookieSession = require('cookie-session')
 app.use(bodyParser.urlencoded({ extended: true }));
 // app.use connects body parser to express
 app.set("view engine", "ejs");
-app.use(cookieParser())
+app.use(cookieSession())
 
 
 app.listen(PORT, () => {
@@ -31,20 +22,24 @@ app.listen(PORT, () => {
 //-------------------------------------------DATA
 
 var urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": { url: "http://www.lighthouselabs.ca",
+              username: 'Lydia'
+            },
+  "9sm5xK": { url: "http://www.google.com",
+              username: 'Lydia'
+            }
 };
-
-var users =  {'123456': { username: 'lydia', email: 'lydia@email.com', password: 'pw0'}};
-
+var users = {};
+// users['123456'] = { username: 'lydia', email: 'lydia@email.com', password: 'pw0'};
 //-------------------------------------------ROUTES
 //GET DATA
+
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase,
-  userid: req.cookies.userid,
-  username: users[req.cookies.userid].username};
-  // input: req.body.username}
-  if(req.cookies){
+  if(req.cookies !== {}){
+    let templateVars = { urls: urlDatabase,
+    userid: req.cookies.userid,
+    username: req.cookies.username
+    };
     res.render("urls_index", templateVars);
   } else {
     res.redirect("/login");
@@ -54,9 +49,11 @@ app.get("/urls", (req, res) => {
 app.get("/", (req, res) => {
   //Check if cookie present, not > login
   if (req.cookies) {
+    debugger;
     res.redirect("/urls")
   } else {
     res.redirect("/login");
+    debugger;
   }
 });
 
@@ -68,14 +65,43 @@ app.get("/urls.json", (req, res) => {
 });
 
 
-// CREATE URL
+// -----------------------------------------------CREATE URL
 app.get("/urls/create", (req, res) => {
-  let templateVars = { userid: req.cookies.userid };
-  res.render("urls_new", templateVars);
+   if(req.cookies !== {}){
+    let templateVars = { urls: urlDatabase,
+    userid: req.cookies.userid,
+    username: req.cookies.username
+    };
+    res.render("urls_new", templateVars);
+  } else {
+    debugger;
+    res.redirect("/login");
+  }
+});
+
+app.post("/urls/create", (req, res) => {
+  debugger;
+  if(req.cookies !== {}){
+    console.log("CREATE IF")
+    let username = req.cookies.username
+    const longURL = req.body.longURL;
+    const newshortURL = generateRandomString();
+    // urlDatabase[newshortURL] = longURL
+
+    urlDatabase[newshortURL] = {url: longURL,
+      username: username};
+    debugger;
+    res.redirect("/urls");
+  } else {
+    console.log("CREATE ELSE")
+    debugger;
+    res.redirect("/login");
+  }
 });
 
 // REDIRECT TO LONGURL BY USING SHORT
 app.get("/urls/:shortURL", (req, res) => {
+  debugger;
   let templateVars = { urls: urlDatabase,
      userid: req.cookies.userid };
   let longURL = req.body.longURL;
@@ -84,6 +110,7 @@ app.get("/urls/:shortURL", (req, res) => {
 
 // LOGIN PAGE
 app.get("/login", (req, res) => {
+  debugger;
     let templateVars = { urls: urlDatabase,
       userid: ''
     };
@@ -96,45 +123,55 @@ app.get("/login", (req, res) => {
 
 // REDIRECT TO LONG URL BY ENTERING SHORTURL ID
 app.get("/u/:shortURL", (req, res) => {
+  debugger;
   let shortURL = req.params.shortURL;
   let longURL = urlDatabase[shortURL];
+   debugger;
   res.redirect(longURL);
-});
-
-// CREATE NEW SHORT URL
-app.post("/urls", (req, res) => {
-  const longURL = req.body.longURL;
-  const newshortURL = generateRandomString();
-  urlDatabase[newshortURL] = longURL;
-  res.redirect("/urls");
 });
 
 // CREATE NEW LONG URL
 app.post("/urls/:shortURL/update", (req, res) => {
+  debugger;
   const newURL = (req.body.longURL);
   const oldURL = urlDatabase[req.params.shortURL];
   urlDatabase[req.params.shortURL] = newURL
+   debugger;
   res.redirect("/urls");
 });
 
 // DELETE URL by ID
 app.post("/urls/:id/delete", (req, res) => {
+  debugger;
   let templateVars = { shortURL: req.params.id };
   delete urlDatabase[templateVars.shortURL];
+   debugger;
   res.redirect("/urls");
 });
 
 // CHECK IF LOGGED IN
 app.post("/login", (req, res) => {
-  for (let user in users) {
-    if (req.body.email === users[user].email && req.body.password === users[user].password) {
-      res.cookie("userid", user)
-      // res.cookie("email", users[user].email)
-      res.redirect("/urls");
-    } else {
-      res.redirect(403, "/")
+  //If no users available:
+  // if(users = {}){
+  //     res.redirect(403, "/login")
+  // } else {
+  // // users is poplulate
+  debugger;
+    for (let user in users) {
+      debugger;
+      // var inputPW = bcrypt.hashSync(req.body.password, 10);
+      // bcrypt.compareSync(req.body.password, user.password);
+      if (req.body.email === users[user].email && bcrypt.compareSync(req.body.password, users[user].password)){
+        debugger;
+        res.cookie("userid", user)
+        res.redirect("/");
+      } else {
+        debugger;
+        res.redirect(403, "/login")
+      }
     }
-  }
+  // }
+  debugger;
 });
 
 // LOGOUT & DELETE COOKIE
@@ -152,7 +189,7 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   var username = req.body.username;
   var email = req.body.email;
-  var password = req.body.password;
+  var password = bcrypt.hashSync(req.body.password, 10);
   var idNum = generateRandomString();
   // var username1 = req.body.username;
 
@@ -169,7 +206,8 @@ app.post("/register", (req, res) => {
 
       users[idNum] = user;
       //change all username cookies to userid
-      res.cookie("userid", users[userid]);
+      res.cookie("userid", idNum);
+      res.cookie("username", username);
       res.redirect("/urls");
   }
 

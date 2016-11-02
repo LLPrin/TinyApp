@@ -3,6 +3,7 @@
 <body>
 
   <% include ./partials/_header %>
+  <% if (userid) { %>
     <table>
       <!-- table row -->
       <tr>
@@ -17,7 +18,7 @@
           <%= urlKey %>
         </td>
         <td>
-          <%= urls[urlKey] %><button method="POST" type="submit">Delete</button></form>
+          <%= urls[urlKey].url + ' ' + urls[urlKey].username %><button method="POST" type="submit">Delete</button></form>
         </td>
       </tr>
     <% } %>
@@ -25,5 +26,8 @@
     <!-- <input type="submit" value="Login"> -->
   <a href="/urls.json">Access the URLs in JSON </a><br/>
   <a href="/urls/create">Make a new short URL</a>
+  <% } else { %>
+
+  <% } %>
 </body>
 </html>
