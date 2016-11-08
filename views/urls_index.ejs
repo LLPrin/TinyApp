@@ -18,7 +18,7 @@
           <%= urlKey %>
         </td>
         <td>
-          <%= urls[urlKey].url + ' ' + urls[urlKey].username %><button method="POST" type="submit">Delete</button></form>
+          <%= urls[urlKey].url + ' ' + urls[urlKey].username %><button method="POST" action="/urls/<%= urlKey %>/delete" type="submit">Delete</button></form>
         </td>
       </tr>
     <% } %>

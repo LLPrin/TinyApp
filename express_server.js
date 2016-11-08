@@ -12,7 +12,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // app.use connects body parser to express
 app.set("view engine", "ejs");
 
-// Cookie Sesssion uses REQ.session NOT RES.session
+// Cookie Sesssion uses REQ.session NOT RES.session!!!!
 app.use(cookieSession({
   name: 'session',
   keys: ['key1', 'key2']
@@ -46,7 +46,7 @@ app.get("/urls", (req, res) => {
     };
     res.render("urls_index", templateVars);
   } else {
-    res.redirect("/login");
+    res.redirect(403, "/login");
   }
 });
 
@@ -86,33 +86,35 @@ app.post("/urls/create", (req, res) => {
   }
 });
 
-// //  ----------------------------------------  REDIRECT TO LONGURL BY USING SHORT
-// app.get("/urls/:shortURL", (req, res) => {
-//   let templateVars = { urls: urlDatabase,
-//      userid: req.session.user_id };
-//   let longURL = req.body.longURL;
-//   res.render("urls_show", {shortURL: req.params.shortURL});
-// });
-
-
 // ---------------------------------------- REDIRECT TO LONG URL BY ENTERING SHORTURL ID
 app.get("/u/:shortURL", (req, res) => {
-  let shortURL = req.params.shortURL;
-  let longURL = urlDatabase[shortURL].url;
-  res.redirect(longURL);
+  if (req.session !== null) {
+    let shortURL = req.params.shortURL;
+    let longURL = urlDatabase[shortURL].url;
+    res.redirect(longURL);
+  } else {
+    res.redirect("/login")
+  }
 });
 
 // ---------------------------------------- CREATE NEW LONG URL
 app.post("/urls/:shortURL/update", (req, res) => {
-  let newURL = req.body.longURL;
-  let oldURL = urlDatabase[req.params.shortURL];
-  urlDatabase[req.params.shortURL] = newURL
-  res.redirect("/urls");
+  if (req.session !== null) {
+    let newURL = req.body.longURL;
+    let oldURL = urlDatabase[req.params.shortURL];
+    urlDatabase[req.params.shortURL] = newURL
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login")
+  }
 });
 
 // ---------------------------------------- DELETE URL by ID
 app.post("/urls/:id/delete", (req, res) => {
-  let templateVars = { shortURL: req.params.id };
+  let templateVars = { shortURL: req.params.id,
+    urls: urlDatabase,
+    userid: req.session.user_id,
+    username: req.session.username};
   delete urlDatabase[templateVars.shortURL];
   res.redirect("/urls");
 });
@@ -120,7 +122,8 @@ app.post("/urls/:id/delete", (req, res) => {
 //  ---------------------------------------- LOGIN PAGE
 app.get("/login", (req, res) => {
     let templateVars = { urls: urlDatabase,
-      userid: ''};
+      userid: '',
+      username: ''};
   res.render("urls_index", templateVars);
 });
 
@@ -154,6 +157,14 @@ app.post("/register", (req, res) => {
   var password = bcrypt.hashSync(req.body.password, 10);
   var idNum = generateRandomString();
 
+//CHECK IF EMAIL EXISTS
+for (let user in users) {
+  if (req.body.email === users[user].email){
+    res.redirect("/register")
+  }
+}
+
+//CHECK IF INPUT FIELDS EMPTY
   if (username === "" || email === "" || password === "") {
     console.log("Please enter values for all fields.")
     res.redirect(400, "/register");
@@ -172,7 +183,7 @@ app.post("/register", (req, res) => {
 
 });
 
-// FOR USE BY USERID
+// FOR USE BY USERID - GENERATES RANDOM USERID
 function generateRandomString() {
   var text = "";
   var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
